@@ -8,11 +8,11 @@ import (
 type Subject[T any] interface {
 	Subscribe(o Observer[T])
 	Unsubscribe(o Observer[T])
-	Notify(e *T)
+	Notify(e T)
 }
 
 type Observer[T any] interface {
-	Update(e *T)
+	Update(e T)
 }
 
 type LocationObserver struct {
@@ -71,7 +71,7 @@ func (o *TemperatureObserver) Run() {
 	}()
 }
 
-func newObserver[T TemperatureObserver | LocationObserver](wg *sync.WaitGroup, id int) Observer[TelemetryEvent] {
+func newObserver[T TemperatureObserver | LocationObserver](wg *sync.WaitGroup, id int) Observer[*TelemetryEvent] {
 	var x T
 	switch (interface{}(x)).(type) {
 	case TemperatureObserver:
@@ -106,10 +106,10 @@ type TelemetryEvent struct {
 }
 
 type TelemetrySubject struct {
-	observers []Observer[TelemetryEvent]
+	observers []Observer[*TelemetryEvent]
 }
 
-func (s *TelemetrySubject) Subscribe(o Observer[TelemetryEvent]) {
+func (s *TelemetrySubject) Subscribe(o Observer[*TelemetryEvent]) {
 	s.observers = append(s.observers, o)
 }
 
@@ -128,7 +128,7 @@ func main() {
 	to2 := newObserver[TemperatureObserver](&wg, 4)
 
 	ts := TelemetrySubject{
-		observers: make([]Observer[TelemetryEvent], 0),
+		observers: make([]Observer[*TelemetryEvent], 0),
 	}
 
 	ts.Subscribe(lo1)
